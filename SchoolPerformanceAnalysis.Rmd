@@ -1,0 +1,215 @@
+---
+title: "Sean_Deery_HW2"
+author: "Sean Deery"
+date: "2023-04-17"
+output: pdf_document
+---
+
+# Reading in the data
+
+```{r}
+# Read in the data, replacing missing data with 'NA'
+school_sections <- read.csv("data-storyteller.csv", na = c(""))
+# Show the first 6 rows
+head(school_sections)
+```
+
+```{r}
+# Show the data types
+str(school_sections)
+```
+
+# Data Cleaning
+
+## Data Types
+
+```{r}
+# Change 'School' data type from character to factor
+school_sections$School <- factor(school_sections$School)
+# Change 'Section' data type from int to factor
+school_sections$Section <- factor(school_sections$Section)
+# Check the structure of the dataframe again
+str(school_sections)
+```
+
+## Organize the Structure
+```{r}
+# Move 'Section' the beginning, and 'Completed' to before 'Very Ahead'
+school_sections <- school_sections[,c(2,1,8,3,4,5,6,7)]
+str(school_sections)
+```
+
+
+
+## Missing Data
+
+```{r}
+# Check how many missing values there are
+sum(is.na(school_sections))
+```
+
+# EDA and Data Viz
+
+There are two categories (Very Ahead and Completed) that describe being ahead, and three categories (Behind, More Behind, and Very Behind) that describe being behind, so the results may be skewed in favor of being generally behind.
+
+## Sections by School
+
+```{r}
+# Create a bar chart to show the number of sections from each school
+SchoolValues<-c(length(which(school_sections$School=='A')), length(which(school_sections$School=='B')), length(which(school_sections$School=='C')), length(which(school_sections$School=='D')), length(which(school_sections$School=='E')))
+
+barplot(SchoolValues, names.arg = c('A', 'B', 'C', 'D', 'E'), main="Number of Sections Per School")
+```
+
+## Completed Student by Section
+
+```{r}
+# Plot the distribution of 'Completed'
+hist(school_sections$Completed, main='Completed Students Distribution')
+# Plot 'Section' and 'Completed'
+barplot(school_sections$Completed, main='Completed Students per Section', names.arg=c(1:30))
+# Summarize 'Completed'
+summary(school_sections$Completed)
+# Identify the largest outlier in 'Completed'
+school_sections[which.max(school_sections$Completed),]
+```
+
+## Very Ahead Students by Section
+
+```{r}
+# Plot 'Section' and 'Very Ahead'
+barplot(school_sections$Very.Ahead..5, main='number of very ahead students per section', names.arg=c(1:30))
+# Summarize 'Very Ahead'
+summary(school_sections$Very.Ahead..5)
+```
+
+## Middling students by Section
+
+```{r}
+# Plot the distribution of 'Middling'
+hist(school_sections$Middling..0, main="Middling Students Distribution")
+# Plot 'Section' and 'Middling'
+barplot(school_sections$Middling..0, main='Middling Students per Section', names.arg = c(1:30))
+# Summarize 'Middling'
+summary(school_sections$Middling..0)
+# Identify the largest outlier in 'Middling'
+school_sections[which.max(school_sections$Middling..0),]
+```
+
+## Behind Students by Section
+
+```{r}
+# Plot the distribution of 'Behind'
+hist(school_sections$Behind..1.5, main='Behind Students Distribution')
+# Plot 'Section' and 'Behind'
+barplot(school_sections$Behind..1.5, main='Behind Students per Section', names.arg = c(1:30))
+# Summarize 'Behind'
+summary(school_sections$Behind..1.5)
+# Identify the largest outlier in 'Behind'
+head(school_sections[order(-school_sections$Behind..1.5),])
+```
+
+## More Behind Students by Section
+
+```{r}
+# Plot the distribution of 'More Behind'
+hist(school_sections$More.Behind..6.10, main="More Behind Students Distribution")
+# Plot 'Section' and 'More Behind'
+barplot(school_sections$More.Behind..6.10, main='More Behind Students per Section', names.arg = c(1:30))
+# Summarize 'More Behind'
+summary(school_sections$More.Behind..6.10)
+```
+
+## Very Behind Students by Section
+
+```{r}
+# Plot the distribution of 'Very Behind'
+hist(school_sections$Very.Behind..11, main="Very Behind Students Distribution")
+# Plot 'Section' and 'Very Behind'
+barplot(school_sections$Very.Behind..11, main='Very Behind Students per Section', names.arg = c(1:30))
+# Summarize 'Very Behind'
+summary(school_sections$Very.Behind..11)
+# Identify the largest outlier in 'Very Behind'
+school_sections[which.max(school_sections$Very.Behind..11),]
+```
+
+## Student's by Category
+
+```{r}
+# Determine the number of students in each category
+StudentSums<-colSums(school_sections[,3:8])
+# Get the total number of Students
+sum(StudentSums)
+# Plot the distribution of student totals per category
+hist(StudentSums, main="Students per Category Distribution")
+# Plot the 
+barplot(StudentSums, main="Students per Category", names.arg = colnames(school_sections[,3:8]))
+# Summarize the 'StudentSums'
+summary(StudentSums)
+```
+
+## Students by Section
+
+```{r}
+# Determine the amount of students in each section
+SectionSums<-rowSums(school_sections[,3:8])
+# Plot the distribution of student totals per section
+hist(SectionSums, main="Students per Section Distribution")
+# Plot the 'Section' and "SectionSums'
+barplot(SectionSums, main='Students per Section', names.arg = c(1:30))
+# Summarize 'SectionSums'
+summary(SectionSums)
+```
+
+
+
+
+## Students per School and Category
+
+```{r}
+# Load the tidyverse library
+library(tidyverse)
+# Get the count of students in each category by school
+by_school <- school_sections %>% group_by(School) %>% summarize(
+  Completed=sum(Completed),
+  Very.Ahead..5=sum(Very.Ahead..5),
+  Middling..0=sum(Middling..0),
+  Behind..1.5=sum(Behind..1.5),
+  More.Behind..6.10=sum(More.Behind..6.10),
+  Very.Behind..11=sum(Very.Behind..11))
+# Show student counts by school and category
+by_school
+```
+
+```{r}
+# Convert student counts into percentages
+by_school[,2:7] <- (by_school[,2:7]/rowSums(by_school[,2:7]))*100
+# Show the student percentage by school and category
+by_school
+```
+
+```{r}
+# Reduce the categories down to Generally Ahead and Generally Behind
+by_school$Generally_Ahead_Percent <- rowSums(by_school[,2:4])
+by_school$Generally_Behind_Percent <- rowSums(by_school[,5:7])
+# Show the percent of students who are generally ahead/behind by school
+by_school[, c('School', 'Generally_Ahead_Percent', 'Generally_Behind_Percent')]
+```
+
+
+## Students per Section and Category
+```{r}
+library(ggplot2)
+school_sections[,3:8] <- (school_sections[,3:8]/rowSums(school_sections[,3:8]))*100
+school_sections$Generally_Ahead_Percent <- rowSums(school_sections[,3:5])
+school_sections$Generally_Behind_Percent <- rowSums(school_sections[,6:8])
+school_sections[, c('School', 'Generally_Ahead_Percent', 'Generally_Behind_Percent')]
+ggplot(school_sections, aes(x=c(1:30), y=Generally_Ahead_Percent, fill=School)) + 
+  geom_bar(stat = "identity") +
+  ggtitle("Percent of Students Generally Ahead") +
+  xlab("Sections") +
+  ylab("Percent Ahead") +
+  theme(plot.title = element_text(hjust=0.5))
+```
+
+
